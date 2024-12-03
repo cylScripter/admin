@@ -8,7 +8,8 @@ import {ElButton} from "element-plus";
 
 import {GetUserListApi} from "#/api";
 
-import type { ListOption } from '#/api/core/list';
+import type { ListOption ,Option} from '#/api/core/list';
+import {GetUserListOption} from "#/utils/option";
 
 interface RowType {
   id: string;
@@ -82,9 +83,19 @@ const gridOptions: VxeGridProps<RowType> = {
   proxyConfig: {
     ajax: {
       query: async ({ page },formData) => {
-        console.log(formData)
+
+        const option: Option[] = [];
+
+        for (const key in formData) {
+
+          option.push({
+            name: GetUserListOption.get(key),
+            value: formData[key],
+          });
+        }
+
         const listOption: ListOption = {
-          list: [],
+          list: option,
           limit: page.pageSize,
           offset: (page.currentPage - 1) * page.pageSize,
           offset_token: '',
