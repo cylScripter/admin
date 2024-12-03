@@ -1,5 +1,5 @@
 export interface Option{
-  name:number;
+  name:number |undefined;
   value:string;
 }
 

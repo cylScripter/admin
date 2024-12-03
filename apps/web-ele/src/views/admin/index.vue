@@ -81,7 +81,8 @@ const gridOptions: VxeGridProps<RowType> = {
   keepSource: true,
   proxyConfig: {
     ajax: {
-      query: async ({ page }) => {
+      query: async ({ page },formData) => {
+        console.log(formData)
         const listOption: ListOption = {
           list: [],
           limit: page.pageSize,
