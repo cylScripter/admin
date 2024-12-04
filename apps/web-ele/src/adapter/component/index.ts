@@ -12,6 +12,7 @@ import { globalShareState } from '@vben/common-ui';
 import { $t } from '@vben/locales';
 
 import {
+  ElOption,
   ElButton,
   ElCheckbox,
   ElCheckboxGroup,
@@ -39,6 +40,12 @@ const withDefaultPlaceholder = <T extends Component>(
   };
 };
 
+// 定义 Option 接口
+interface Option {
+  value: string | number;
+  label: string;
+}
+
 // 这里需要自行根据业务组件库进行适配，需要用到的组件都需要在这里类型说明
 export type ComponentType =
   | 'Checkbox'
@@ -47,6 +54,7 @@ export type ComponentType =
   | 'Divider'
   | 'Input'
   | 'InputNumber'
+  | 'InputPassword'
   | 'RadioGroup'
   | 'Select'
   | 'Space'
@@ -54,6 +62,7 @@ export type ComponentType =
   | 'TimePicker'
   | 'TreeSelect'
   | 'Upload'
+  | 'SelectWithOptions'
   | BaseFormComponentType;
 
 async function initComponentAdapter() {
@@ -83,6 +92,17 @@ async function initComponentAdapter() {
     DatePicker: ElDatePicker,
     TreeSelect: withDefaultPlaceholder(ElTreeSelect, 'select'),
     Upload: ElUpload,
+    InputPassword: (props, { attrs, slots }) => {
+      return h(ElInput, { ...props, attrs, type: 'password', showPassword: true }, slots);
+    },
+    SelectWithOptions: (props, { attrs, slots })=>{
+      return h(ElSelect, { ...props, ...attrs, filterable: true, multiple: true ,allowCreate:true,reserveKeyword:false},
+        {
+          default: ()=> (props.options || []).map((item:Option) => h(ElOption, { value: item.value, label: item.label }))
+        ,...slots}
+        );
+    }
+
   };
 
   // 将组件注册到全局共享状态中

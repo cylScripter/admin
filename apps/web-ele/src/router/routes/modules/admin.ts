@@ -1,7 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router';
 
 import { BasicLayout } from '#/layouts';
-import { $t } from '#/locales';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -17,7 +16,7 @@ const routes: RouteRecordRaw[] = [
       {
         name: 'adminuser',
         path: '/admin',
-        component: () => import('#/views/admin/index.vue'),
+        component: () => import('#/views/admin/user/index.vue'),
         meta: {
           affixTab: true,
           icon: 'lucide:area-chart',

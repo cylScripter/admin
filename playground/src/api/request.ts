@@ -74,9 +74,9 @@ function createRequestClient(baseURL: string) {
     fulfilled: (response) => {
       const { data: responseData, status } = response;
 
-      const { code, data } = responseData;
+      const { err_code, data } = responseData;
 
-      if (status >= 200 && status < 400 && code === 0) {
+      if (status >= 200 && status < 400 && err_code === 0) {
         return data;
       }
       throw Object.assign({}, response, { response });
@@ -100,7 +100,7 @@ function createRequestClient(baseURL: string) {
       // 这里可以根据业务进行定制,你可以拿到 error 内的信息进行定制化处理，根据不同的 code 做不同的提示，而不是直接使用 message.error 提示 msg
       // 当前mock接口返回的错误字段是 error 或者 message
       const responseData = error?.response?.data ?? {};
-      const errorMessage = responseData?.error ?? responseData?.message ?? '';
+      const errorMessage = responseData?.error ?? responseData?.err_msg ?? '';
       // 如果没有错误信息，则会根据状态码进行提示
       message.error(errorMessage || msg);
     }),
