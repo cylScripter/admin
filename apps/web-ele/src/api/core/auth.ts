@@ -11,12 +11,21 @@ export namespace AuthApi {
   /** 登录接口返回值 */
   export interface LoginResult {
     token: string;
+    user: object;
   }
 
   export interface RefreshTokenResult {
     data: string;
     status: number;
   }
+
+  export interface GetAuthCodeResp {
+    auth_codes : string[]
+  }
+
+  export interface GetAuthCodeReq {}
+
+
 }
 
 /**
@@ -47,6 +56,6 @@ export async function logoutApi() {
 /**
  * 获取用户权限码
  */
-export async function getAccessCodesApi() {
-  return requestClient.get<string[]>('/auth/codes');
+export async function getAccessCodesApi(data: AuthApi.GetAuthCodeReq) {
+  return requestClient.post<AuthApi.GetAuthCodeResp>("/system/GetAuthCode", data);
 }

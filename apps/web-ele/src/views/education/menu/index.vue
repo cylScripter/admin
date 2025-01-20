@@ -7,12 +7,13 @@ import { ElButton, ElSwitch, ElMessageBox, ElMessage } from "element-plus";
 import { useVbenVxeGrid } from "#/adapter/vxe-table";
 import { Delete, Edit, Plus  } from "@element-plus/icons-vue";
 import { Icon } from '@iconify/vue';
-import CreateMenu from "#/form/createmenu/index.vue";
+import CreateMenu from "#/form/createeduMenu/index.vue";
 import { formatTimestamp, GetOption} from "#/utils/utils";
-import type { MenuRowType } from "#/types/menu";
-import { DeleteMenuApi, GetMenuListApi } from "#/api/core/menu";
-import { GetMenuListOption } from "#/utils/option";
+import { DeleteMenuApi, GetMenuListApi, SetEduMenuStatusApi } from "#/api/education";
+
+import { GetEducationListOption } from "#/utils/option";
 import { reactive ,ref} from "vue";
+import type { ModelMenu } from "#/types/education";
 
 
 interface option {
@@ -20,7 +21,7 @@ interface option {
   value: string;
 }
 //
-let FormData = reactive<MenuRowType>({
+let FormData = reactive<ModelMenu>({
   id: 0,
   created_at: 0,
   updated_at: 0,
@@ -52,8 +53,10 @@ let FormData = reactive<MenuRowType>({
   path: "",
   redirect: "",
   parent_id: 0,
-  children: []
-})
+  children: [],
+  status: false,
+});
+
 const getOption =  ()=>{
   let option: Option[] = [];
   option.push({name:6 , value: "0"});
@@ -64,12 +67,11 @@ const getOption =  ()=>{
       offset: 0,
       offset_token: "",
     },
-    id: 0
   });
   let result: option[] = [];
   result.push({label: "根节点", value: "0"});
   resp.then(async ()=>{
-    (await resp).menus.forEach((menu) => result.push(
+    (await resp).list.forEach((menu) => result.push(
       {label: menu.name+`(${menu.meta.title})`, value: menu.id.toString()}
     ));
   });
@@ -82,6 +84,7 @@ const getOption =  ()=>{
 const childRef = ref();
 
 const menuOnSubmit = () => {
+
   if (actionTypeRef.value == "create"){
     childRef.value.CreateMenu();
   }else{
@@ -136,7 +139,7 @@ const formOptions: VbenFormProps = {
   submitOnEnter: true,
 };
 
-const gridOptions: VxeGridProps<MenuRowType> = {
+const gridOptions: VxeGridProps<ModelMenu> = {
   checkboxConfig: {
     highlight: true,
     labelField: "name",
@@ -159,12 +162,11 @@ const gridOptions: VxeGridProps<MenuRowType> = {
     },
     { field: "component", title: "页面组件" },
     {
-      field: "order",
-       title: "排序" ,
-       slots: { default: "order" },
-       width: 50
-      },
-
+      field: "status",
+      title: "启用" ,
+      slots: { default: "status" },
+      width: 100
+    },
     {
       field: "action",
       title: "操作" ,
@@ -173,11 +175,12 @@ const gridOptions: VxeGridProps<MenuRowType> = {
     },
   ],
   keepSource: true,
+  minHeight: 600,
   proxyConfig: {
     ajax: {
       query: async ({ page }, formData) => {
         let option: Option[] = [];
-        option = GetOption( formData,GetMenuListOption);
+        option = GetOption( formData,GetEducationListOption);
         const listOption: ListOption = {
           options: option,
           limit: page.pageSize,
@@ -186,11 +189,10 @@ const gridOptions: VxeGridProps<MenuRowType> = {
         };
         const result = await GetMenuListApi({
           list_option: listOption,
-          id: 0
         });
-        console.log(result);
+        console.log(result.list);
         return {
-          items: result.menus,
+          items: result.list,
           total: result.paginate.total,
         };
       },
@@ -217,9 +219,9 @@ const handleDelete = (id:number) => {
       resp.then(() => {
         GridAPi.query();
         ElMessage({
-        type: "success",
-        message: "删除成功",
-      });
+          type: "success",
+          message: "删除成功",
+        });
       });
     })
 };
@@ -250,7 +252,7 @@ const resetMeta = () => {
 };
 
 const actionTypeRef = ref("create");
-const OpenCreateMenuDrawer = (data: MenuRowType| null,actionType:string,parent :number) => {
+const OpenCreateMenuDrawer = (data: ModelMenu| null,actionType:string,parent :number) => {
   if (actionType == "create"){
     FormData.parent_id = parent;
     FormData.id = 0;
@@ -287,6 +289,37 @@ const closeDrawer = () => {
   GridAPi.query();
 }
 
+import {  useRouter } from "vue-router";
+const router = useRouter();
+
+const openSetFunc = () => {
+  // 这里就是路由跳转，也可以用path
+  router.push({ path: "/setFunc" });
+};
+
+
+const switchStatus =ref<Map<number,boolean>>(new Map())
+const setMenuStatus = (id:number,status:boolean) => {
+   if (switchStatus.value.get(id)){
+     return
+   }
+   console.log(id,status);
+   switchStatus.value.set(id,true)
+
+  SetEduMenuStatusApi({
+    values: [{
+      id: id,
+      value: status
+    }]
+  }).then(()=>{
+    switchStatus.value.set(id,false)
+    ElMessage.success("修改成功")
+  }).catch(()=>{
+    switchStatus.value.set(id,false)
+  })
+}
+
+
 
 </script>
 
@@ -296,6 +329,10 @@ const closeDrawer = () => {
       <template #toolbar-tools>
         <ElButton :icon="Plus" type="primary" @click="OpenCreateMenuDrawer(null,'create',0)">
           新增根菜单
+        </ElButton>
+
+        <ElButton :icon="Plus" type="primary" @click="openSetFunc">
+          配置权限
         </ElButton>
       </template>
 
@@ -308,15 +345,13 @@ const closeDrawer = () => {
         </div>
       </template>
       <template #status="{ row }">
-        <ElSwitch v-model="row.status" />
+        <ElSwitch v-model="row.status" :loading="switchStatus.get(row.id)===undefined ?false :switchStatus.get(row.id)"    @click="() => setMenuStatus(row.id,row.status)" />
       </template>
       <template #title="{ row }">
-          <span>{{ row.meta.title}}</span>
+        <span>{{ row.meta.title}}</span>
       </template>
 
-      <template #order="{ row }">
-        <span>{{ row.meta.order }}</span>
-        </template>
+
 
       <template #action="{ row }">
         <ElButton
@@ -336,5 +371,9 @@ const closeDrawer = () => {
     <CreateMenuDrawer class="w-[800px]" title="编辑菜单">
       <CreateMenu  :data="FormData" :actionType="actionTypeRef" ref="childRef" :closeDrawer="closeDrawer"></CreateMenu>
     </CreateMenuDrawer>
+
+
   </div>
 </template>
+
+

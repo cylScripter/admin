@@ -119,7 +119,7 @@ const gridOptions: VxeGridProps<RowType> = {
           }
         }
         const listOption: ListOption = {
-          list: option,
+          options: option,
           limit: page.pageSize,
           offset: (page.currentPage - 1) * page.pageSize,
           offset_token: "",
@@ -196,7 +196,7 @@ const handleDelete = () => {
         <ElButton :key="row.id" :icon="Setting" link type="primary"> 设置角色 </ElButton>
       </template>
     </Grid>
-    <CreateUserDrawer class="w-[600px]" title="基础示例">
+    <CreateUserDrawer class="w-[600px]" title="创建用户">
       <div class="m-2 p-5">
         <CreateUser />
       </div>

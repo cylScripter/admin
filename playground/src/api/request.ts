@@ -24,7 +24,6 @@ function createRequestClient(baseURL: string) {
   const client = new RequestClient({
     baseURL,
   });
-
   /**
    * 重新认证逻辑
    */
@@ -73,7 +72,6 @@ function createRequestClient(baseURL: string) {
   client.addResponseInterceptor<HttpResponse>({
     fulfilled: (response) => {
       const { data: responseData, status } = response;
-
       const { err_code, data } = responseData;
 
       if (status >= 200 && status < 400 && err_code === 0) {
@@ -93,6 +91,9 @@ function createRequestClient(baseURL: string) {
       formatToken,
     }),
   );
+
+
+
 
   // 通用的错误处理,如果没有进入上面的错误处理逻辑，就会进入这里
   client.addResponseInterceptor(

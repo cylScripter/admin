@@ -85,7 +85,18 @@ async function initComponentAdapter() {
     Input: withDefaultPlaceholder(ElInput, 'input'),
     InputNumber: withDefaultPlaceholder(ElInputNumber, 'input'),
     RadioGroup: ElRadioGroup,
-    Select: withDefaultPlaceholder(ElSelect, 'select'),
+    Select: (props, { attrs, slots }) => {
+      return h(
+        ElSelect,
+        { ...props, ...attrs},
+        {
+          default: () =>
+            props.options.map((item: { value: string; label: string }) =>
+              h(ElOption, { key: item.value, label: item.label, value: item.value },slots)
+            ),
+        },
+      );
+    },
     Space: ElSpace,
     Switch: ElSwitch,
     TimePicker: ElTimePicker,

@@ -13,9 +13,9 @@ export default defineConfig(async () => {
       ],
       server: {
         proxy: {
-          '/api': {
+          '/gateway': {
             changeOrigin: true,
-            rewrite: (path) => path.replace(/^\/api/, ''),
+            rewrite: (path) => path.replace(/^\/gateway/, ''),
             // mock代理目标地址
             target: 'http://localhost:8887/gateway',
             ws: true,
